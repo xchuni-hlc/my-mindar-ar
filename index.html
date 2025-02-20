@@ -1,18 +1,68 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MindAR.js + Three.js</title>
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2/dist/mindar-image-three.prod.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <title>WebAR Demo</title>
+    <!-- 載入必要的函式庫 -->
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <script>
+        AFRAME.registerComponent('clickable', {
+            init: function () {
+                this.el.addEventListener('click', function () {
+                    // 當3D模型被點擊時跳轉到指定網頁
+                    // 請將URL替換成您想要跳轉的網址
+                    window.location.href = 'https://xchuni-hlc.github.io/mathhunter01/club1.html';
+                });
+            }
+        });
+    </script>
     <style>
-        body { margin: 0; overflow: hidden; }
-        #mindar-container { width: 100vw; height: 100vh; position: absolute; }
+        .arjs-loader {
+            height: 100%;
+            width: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .arjs-loader div {
+            text-align: center;
+            font-size: 1.25em;
+            color: white;
+        }
     </style>
 </head>
-<body>
-    <div id="mindar-container"></div>
-    <script src="app.js"></script>
+<body style="margin: 0px; overflow: hidden;">
+    <!-- 載入畫面 -->
+    <div class="arjs-loader">
+        <div>載入中，請稍候...</div>
+    </div>
+
+    <!-- AR場景 -->
+    <a-scene
+        embedded
+        arjs='sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;'
+        renderer='antialias: true; alpha: true'>
+
+        <!-- 使用圖案標記，pattern-marker.patt需要替換成您的標記檔案 -->
+        <a-marker type='pattern' url='pattern-GC1.patt'>
+            <!-- 3D模型 -->
+            <a-entity
+                position='0 0 0'
+                scale='1 1 1'
+                rotation='0 0 0'
+                gltf-model="clue1.glb"
+                clickable>
+            </a-entity>
+        </a-marker>
+
+        <!-- 相機 -->
+        <a-entity camera></a-entity>
+    </a-scene>
 </body>
 </html>
