@@ -2,8 +2,9 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>我的 WebAR 项目 (NFT)</title>
+  <title>我的 WebAR 项目 (NFT - 调试)</title>
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <!-- 使用 3.4.7 版本，因为您的环境似乎与 3.4.8 不兼容 -->
   <script src="https://raw.githack.com/AR-js-org/AR.js/3.4.7/aframe/build/aframe-ar.js"></script>
 </head>
 <body style="margin : 0px; overflow: hidden;">
@@ -14,21 +15,27 @@
     <!-- NFT 标记 -->
     <a-marker
       type="nft"
-      url="test"
+      url="image"
       smooth="true"
       smoothCount="10"
       smoothTolerance="0.01"
       smoothThreshold="5"
     >
-      <!-- 3D 模型 -->
+      <!-- 注释掉 3D 模型 -->
+      <!--
       <a-entity
         gltf-model="./clue1.glb"
         scale="5 5 5"
         position="0 0 0"
         rotation="-90 0 0"
-       clickable
+        clickable
         link="href: https://xchuni-hlc.github.io/mathhunter01/club1.html; on: click"
       >
+      </a-entity>
+      -->
+
+      <!-- 添加一个简单的红色盒子用于测试 -->
+      <a-entity geometry="primitive: box" material="color: red"></a-entity>
     </a-marker>
 
     <!-- 相机 -->
