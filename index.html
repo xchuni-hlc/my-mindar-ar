@@ -1,54 +1,40 @@
-<script src="https://cdn.jsdelivr.net/gh/aframevr/aframe@1.6.0/dist/aframe-master.min.js"></script>
-<script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>WebAR Project</title>
+    <!-- 引入 A-Frame 和 AR.js -->
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+</head>
+<body>
+    <!-- AR 場景 -->
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: true;">
+        <!-- Marker 定義 -->
+        <a-marker preset="custom" type="pattern" url="pattern-GC1.patt">
+            <!-- 3D 模型 -->
+            <a-entity
+                gltf-model="url(clue1.glb)"
+                scale="0.5 0.5 0.5" <!-- 調整模型大小 -->
+                position="0 0 0" <!-- 模型位置 -->
+                events="click: redirectToWebsite;"> <!-- 點擊事件 -->
+            </a-entity>
+        </a-marker>
+        <!-- 攝影機 -->
+        <a-entity camera></a-entity>
+    </a-scene>
 
-<style>
-  .arjs-loader {
-    height: 100%;
-    width: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
-    background-color: rgba(0, 0, 0, 0.8);
-    z-index: 9999;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-
-  .arjs-loader div {
-    text-align: center;
-    font-size: 1.25em;
-    color: white;
-  }
-</style>
-
-<body style="margin : 0px; overflow: hidden;">
-  <!-- minimal loader shown until image descriptors are loaded -->
-  <div class="arjs-loader">
-    <div>Loading, please wait...</div>
-  </div>
-  <a-scene
-    vr-mode-ui="enabled: false;"
-    renderer="logarithmicDepthBuffer: true; precision: medium;"
-    embedded
-    arjs="trackingMethod: best; sourceType: webcam;debugUIEnabled: true;"
-  >
-    <!-- we use cors proxy to avoid cross-origin problems ATTENTION! you need to set up your server -->
-    <a-nft
-      type="nft"
-      url="your-server/https://raw.githack.com/AR-js-org/AR.js/master/aframe/examples/image-tracking/nft/trex/trex-image/trex"
-      smooth="true"
-      smoothCount="10"
-      smoothTolerance=".01"
-      smoothThreshold="5"
-    >
-      <a-entity
-        gltf-model="your-server/https://raw.githack.com/AR-js-org/AR.js/master/aframe/examples/image-tracking/nft/trex/scene.gltf"
-        scale="5 5 5"
-        position="150 300 -100"
-      >
-      </a-entity>
-    </a-nft>
-    <a-entity camera></a-entity>
-  </a-scene>
+    <!-- 自訂 JavaScript -->
+    <script>
+        // 註冊點擊事件跳轉網頁
+        AFRAME.registerComponent('redirect-to-website', {
+            init: function () {
+                this.el.addEventListener('click', function () {
+                    window.location.href = 'https://xchuni-hlc.github.io/mathhunter01/club1.html';
+                });
+            }
+        });
+    </script>
 </body>
+</html>
