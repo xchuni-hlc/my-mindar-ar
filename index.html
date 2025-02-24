@@ -8,7 +8,6 @@
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <style>
-        /* 確保場景適配螢幕 */
         body {
             margin: 0;
             overflow: hidden;
@@ -17,22 +16,36 @@
             height: 100vh;
             width: 100vw;
         }
+        /* 調試訊息樣式 */
+        #debug-message {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 5px;
+            font-family: Arial, sans-serif;
+        }
     </style>
 </head>
 <body>
+    <!-- 調試訊息區 -->
+    <div id="debug-message">等待相機啟動...</div>
+
     <!-- AR 場景 -->
     <a-scene
         embedded
-        arjs="sourceType: webcam; sourceWidth: 640; sourceHeight: 480; displayWidth: 640; displayHeight: 480; debugUIEnabled: false;"
+        arjs="sourceType: webcam; sourceWidth: 640; sourceHeight: 480; displayWidth: 640; displayHeight: 480; debugUIEnabled: true;"
         vr-mode-ui="enabled: false">
         <!-- Marker 定義 -->
-        <a-marker preset="custom" type="pattern" url="patterngc1.patt">
+        <a-marker preset="custom" type="pattern" url="marker.patt">
             <!-- 3D 模型 -->
             <a-entity
-                gltf-model="./clue1.glb"
+                gltf-model="url(clue1.glb)"
                 scale="0.5 0.5 0.5"
                 position="0 0 0"
-                events="click: redirectToWebsite;">
+                events="click: redirectToWebsite;"
+                markerhandler>
             </a-entity>
         </a-marker>
         <!-- 攝影機 -->
@@ -41,6 +54,7 @@
 
     <!-- 自訂 JavaScript -->
     <script>
+        // 點擊跳轉功能
         AFRAME.registerComponent('redirect-to-website', {
             init: function () {
                 this.el.addEventListener('click', function () {
@@ -48,6 +62,31 @@
                 });
             }
         });
+
+        // Marker 掃描確認功能
+        AFRAME.registerComponent('markerhandler', {
+            init: function () {
+                this.el.sceneEl.addEventListener('markerFound', function () {
+                    document.getElementById('debug-message').innerText = '掃描成功！Marker 已找到';
+                    console.log('Marker found!');
+                });
+                this.el.sceneEl.addEventListener('markerLost', function () {
+                    document.getElementById('debug-message').innerText = 'Marker 遺失';
+                    console.log('Marker lost!');
+                });
+            }
+        });
+
+        // 檢查相機是否啟動
+        window.onload = function () {
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(function () {
+                    document.getElementById('debug-message').innerText = '相機已啟動';
+                })
+                .catch(function (err) {
+                    document.getElementById('debug-message').innerText = '相機啟動失敗: ' + err.message;
+                });
+        };
     </script>
 </body>
 </html>
