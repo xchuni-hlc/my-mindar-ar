@@ -2,23 +2,37 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
     <title>WebAR Project</title>
     <!-- 引入 A-Frame 和 AR.js -->
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <style>
+        /* 確保場景適配螢幕 */
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+        a-scene {
+            height: 100vh;
+            width: 100vw;
+        }
+    </style>
 </head>
 <body>
     <!-- AR 場景 -->
-    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: true;">
+    <a-scene
+        embedded
+        arjs="sourceType: webcam; sourceWidth: 640; sourceHeight: 480; displayWidth: 640; displayHeight: 480; debugUIEnabled: false;"
+        vr-mode-ui="enabled: false">
         <!-- Marker 定義 -->
-        <a-marker preset="custom" type="pattern" url="pattern-GC1">
+        <a-marker preset="custom" type="pattern" url="patterngc1.patt">
             <!-- 3D 模型 -->
             <a-entity
-                gltf-model="./clue1.glb)"
-                scale="0.5 0.5 0.5" <!-- 調整模型大小 -->
-                position="0 0 0" <!-- 模型位置 -->
-                events="click: redirectToWebsite;"> <!-- 點擊事件 -->
+                gltf-model="./clue1.glb"
+                scale="0.5 0.5 0.5"
+                position="0 0 0"
+                events="click: redirectToWebsite;">
             </a-entity>
         </a-marker>
         <!-- 攝影機 -->
@@ -27,7 +41,6 @@
 
     <!-- 自訂 JavaScript -->
     <script>
-        // 註冊點擊事件跳轉網頁
         AFRAME.registerComponent('redirect-to-website', {
             init: function () {
                 this.el.addEventListener('click', function () {
