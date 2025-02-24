@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
     <title>WebAR Project</title>
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
     <style>
         body { margin: 0; overflow: hidden; }
         a-scene { height: 100vh; width: 100vw; }
@@ -14,10 +14,10 @@
 </head>
 <body>
     <div id="debug-message">等待相機啟動...</div>
-    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: true; trackingMethod: best; sourceWidth: 640; sourceHeight: 480; displayWidth: 640; displayHeight: 480;">
-        <a-marker preset="custom" type="pattern" url="marker.patt">
-            <a-entity gltf-model="url(clue1.glb)" scale="0.5 0.5 0.5" position="0 0 0" events="click: redirectToWebsite;" markerhandler></a-entity>
-        </a-marker>
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: true; trackingMethod: best;">
+        <a-nft type="nft" url="target.nft">
+            <a-entity gltf-model="url(clue1.glb)" scale="0.5 0.5 0.5" position="0 0 0" events="click: redirectToWebsite;"></a-entity>
+        </a-nft>
         <a-entity camera></a-entity>
     </a-scene>
 
@@ -30,24 +30,11 @@
                 })
                 .catch(err => console.error(err));
         }
-        checkFile('pattern-hiro.patt', 'Marker 檔案');
+        checkFile('target.nft', 'NFT 檔案');
         checkFile('clue1.glb', '3D 模型');
 
         AFRAME.registerComponent('redirect-to-website', {
             init: function () { this.el.addEventListener('click', function () { window.location.href = 'https://xchuni-hlc.github.io/mathhunter01/club1.html'; }); }
-        });
-
-        AFRAME.registerComponent('markerhandler', {
-            init: function () {
-                this.el.sceneEl.addEventListener('markerFound', function () {
-                    document.getElementById('debug-message').innerText = '掃描成功！';
-                    console.log('Marker found!');
-                });
-                this.el.sceneEl.addEventListener('markerLost', function () {
-                    document.getElementById('debug-message').innerText = 'Marker 遺失';
-                    console.log('Marker lost!');
-                });
-            }
         });
 
         window.onload = function () {
@@ -55,8 +42,6 @@
                 .then(() => {
                     document.getElementById('debug-message').innerText = '相機已啟動';
                     console.log('Camera started');
-                    const scene = document.querySelector('a-scene');
-                    console.log('Debug UI Enabled:', scene.getAttribute('arjs').includes('debugUIEnabled: true'));
                 })
                 .catch(err => {
                     document.getElementById('debug-message').innerText = '相機啟動失敗: ' + err.message;
