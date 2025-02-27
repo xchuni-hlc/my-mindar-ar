@@ -15,7 +15,7 @@
 <body>
     <div id="debug-message">等待相機啟動...</div>
     <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: true; trackingMethod: best;">
-        <a-nft type="nft" url="my-mindar-ar/GC1">
+        <a-nft type="nft" url="GC1">
             <a-entity gltf-model="url(./clue1.glb)" scale="0.5 0.5 0.5" position="0 0 0" events="click: redirectToWebsite;" nft-handler></a-entity>
         </a-nft>
         <a-entity camera></a-entity>
@@ -30,7 +30,7 @@
                 })
                 .catch(err => console.error(err));
         }
-        checkFile('my-mindar-ar/GC1.fset', 'NFT 檔案 (.fset)');
+        checkFile('GC1.fset', 'NFT 檔案 (.fset)');
         checkFile('./clue1.glb', '3D 模型');
 
         AFRAME.registerComponent('redirect-to-website', {
