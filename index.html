@@ -50,6 +50,16 @@
             }
         });
 
+        AFRAME.registerComponent('gltf-model-fallback', {
+        init: function () {
+            this.el.addEventListener('model-error', (e) => {
+                console.error('Model load error:', e.detail);
+            });
+        }
+    });
+
+    // 在 <a-entity> 中添加該組件
+    <a-entity gltf-model="url(./clue1.glb)" scale="0.5 0.5 0.5" position="0 0 0" events="click: redirectToWebsite;" nft-handler gltf-model-fallback></a-entity>
         window.onload = function () {
             navigator.mediaDevices.getUserMedia({ video: true })
                 .then(() => {
