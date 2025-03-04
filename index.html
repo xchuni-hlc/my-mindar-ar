@@ -37,7 +37,7 @@
 
       <!-- 目標圖像上的AR內容 -->
       <a-entity mindar-image-target="targetIndex: 0">
-        <!-- 3D模型 - 調整方向並停止旋轉 -->
+        <!-- 3D模型 - 初始固定位置和大小 -->
         <a-gltf-model
           id="ar-model"
           rotation="90 0 0"
@@ -50,9 +50,85 @@
   </div>
   
   <script>
-    // 當模型被點擊時，跳轉到指定的網頁
+    // 當 DOM 載入完成時初始化
     document.addEventListener('DOMContentLoaded', function() {
+      const scene = document.querySelector('a-scene');
       const model = document.querySelector('#ar-model');
+
+      // 監聽目標圖案被找到的事件，固定模型位置
+      scene.addEventListener('targetFound', (event) => {
+        const target = event.detail.targetEl;
+        const modelPosition = model.getAttribute('position');
+        const modelRotation = model.getAttribute('rotation');
+        const modelScale = model.getAttribute('scale');
+
+        // 固定模型位置、旋轉和縮放，禁用動態更新
+        model.setAttribute('position', modelPosition);
+        model.setAttribute('rotation', modelRotation);
+        model.setAttribute('scale', modelScale);
+
+        // 移除 mindar-image-target 的動態追蹤
+        target.removeAttribute('mindar-image-target');
+      });
+
+      // 添加觸控互動：旋轉和縮放
+      let isDragging = false;
+      let previousTouch = null;
+      let rotation = { x: 0, y: 0 };
+      let scale = 0.1; // 初始縮放值
+
+      model.addEventListener('touchstart', (event) => {
+        isDragging = true;
+        previousTouch = event.touches[0];
+      });
+
+      model.addEventListener('touchmove', (event) => {
+        if (!isDragging || event.touches.length !== 1) return;
+
+        const currentTouch = event.touches[0];
+        const deltaX = currentTouch.pageX - previousTouch.pageX;
+        const deltaY = currentTouch.pageY - previousTouch.pageY;
+
+        // 根據觸控移動更新旋轉
+        rotation.y += deltaX * 0.1; // 水平旋轉
+        rotation.x += deltaY * 0.1; // 垂直旋轉
+
+        // 應用旋轉到模型
+        model.setAttribute('rotation', `${rotation.x} ${rotation.y} 0`);
+
+        previousTouch = currentTouch;
+      });
+
+      model.addEventListener('touchend', () => {
+        isDragging = false;
+        previousTouch = null;
+      });
+
+      // 縮放功能：使用雙指捏合
+      model.addEventListener('touchstart', (event) => {
+        if (event.touches.length === 2) {
+          const touch1 = event.touches[0];
+          const touch2 = event.touches[1];
+          const distance = Math.hypot(touch2.pageX - touch1.pageX, touch2.pageY - touch1.pageY);
+          window.initialDistance = distance;
+          window.initialScale = scale;
+        }
+      });
+
+      model.addEventListener('touchmove', (event) => {
+        if (event.touches.length === 2) {
+          const touch1 = event.touches[0];
+          const touch2 = event.touches[1];
+          const distance = Math.hypot(touch2.pageX - touch1.pageX, touch2.pageY - touch1.pageY);
+          const scaleFactor = distance / window.initialDistance;
+
+          // 調整縮放範圍（例如 0.05 到 0.5）
+          scale = Math.max(0.05, Math.min(0.5, window.initialScale * scaleFactor));
+          model.setAttribute('scale', `${scale} ${scale} ${scale}`);
+        }
+      });
+
+      // 點擊跳轉到指定網頁
       model.addEventListener('click', function() {
         window.location.href = 'https://xchuni-hlc.github.io/mathhunter01/club1.html';
       });
