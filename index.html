@@ -4,10 +4,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>WebAR - 數感小獵人</title>
   
-  <!-- 引入 MindAR 和 A-Frame 庫 -->
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image.prod.js"></script>
+  <!-- 引入 MindAR 和 A-Frame 庫，設置為模組 -->
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image.prod.js" type="module"></script>
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js" type="module"></script>
   
   <style>
     body {
@@ -36,7 +36,7 @@
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
       <!-- 目標圖像上的AR內容 -->
-      <a-entity mindar-image-target="targetIndex: 0">
+      <a-entity id="target" mindar-image-target="targetIndex: 0">
         <!-- 3D模型 - 初始固定位置和大小 -->
         <a-gltf-model
           id="ar-model"
@@ -54,21 +54,26 @@
     document.addEventListener('DOMContentLoaded', function() {
       const scene = document.querySelector('a-scene');
       const model = document.querySelector('#ar-model');
+      const target = document.querySelector('#target');
 
       // 監聽目標圖案被找到的事件，固定模型位置
       scene.addEventListener('targetFound', (event) => {
-        const target = event.detail.targetEl;
-        const modelPosition = model.getAttribute('position');
-        const modelRotation = model.getAttribute('rotation');
-        const modelScale = model.getAttribute('scale');
+        if (event.detail && event.detail.targetEl) {
+          const targetEl = event.detail.targetEl;
+          const modelPosition = model.getAttribute('position');
+          const modelRotation = model.getAttribute('rotation');
+          const modelScale = model.getAttribute('scale');
 
-        // 固定模型位置、旋轉和縮放，禁用動態更新
-        model.setAttribute('position', modelPosition);
-        model.setAttribute('rotation', modelRotation);
-        model.setAttribute('scale', modelScale);
+          // 固定模型位置、旋轉和縮放，禁用動態更新
+          model.setAttribute('position', modelPosition);
+          model.setAttribute('rotation', modelRotation);
+          model.setAttribute('scale', modelScale);
 
-        // 移除 mindar-image-target 的動態追蹤
-        target.removeAttribute('mindar-image-target');
+          // 移除 mindar-image-target 的動態追蹤
+          targetEl.removeAttribute('mindar-image-target');
+        } else {
+          console.error('Target element not found in targetFound event');
+        }
       });
 
       // 添加觸控互動：旋轉和縮放
@@ -77,41 +82,51 @@
       let rotation = { x: 0, y: 0 };
       let scale = 0.1; // 初始縮放值
 
+      // 單指觸控：旋轉
       model.addEventListener('touchstart', (event) => {
-        isDragging = true;
-        previousTouch = event.touches[0];
+        if (event.touches.length === 1) {
+          isDragging = true;
+          previousTouch = event.touches[0];
+          event.preventDefault(); // 防止預設行為
+        }
       });
 
       model.addEventListener('touchmove', (event) => {
-        if (!isDragging || event.touches.length !== 1) return;
+        if (isDragging && event.touches.length === 1) {
+          const currentTouch = event.touches[0];
+          const deltaX = currentTouch.pageX - previousTouch.pageX;
+          const deltaY = currentTouch.pageY - previousTouch.pageY;
 
-        const currentTouch = event.touches[0];
-        const deltaX = currentTouch.pageX - previousTouch.pageX;
-        const deltaY = currentTouch.pageY - previousTouch.pageY;
+          // 根據觸控移動更新旋轉
+          rotation.y += deltaX * 0.1; // 水平旋轉
+          rotation.x += deltaY * 0.1; // 垂直旋轉
 
-        // 根據觸控移動更新旋轉
-        rotation.y += deltaX * 0.1; // 水平旋轉
-        rotation.x += deltaY * 0.1; // 垂直旋轉
+          // 應用旋轉到模型
+          model.setAttribute('rotation', `${rotation.x} ${rotation.y} 0`);
 
-        // 應用旋轉到模型
-        model.setAttribute('rotation', `${rotation.x} ${rotation.y} 0`);
-
-        previousTouch = currentTouch;
+          previousTouch = currentTouch;
+          event.preventDefault(); // 防止預設行為
+        }
       });
 
-      model.addEventListener('touchend', () => {
-        isDragging = false;
-        previousTouch = null;
+      model.addEventListener('touchend', (event) => {
+        if (event.touches.length === 0) {
+          isDragging = false;
+          previousTouch = null;
+        }
       });
 
-      // 縮放功能：使用雙指捏合
+      // 雙指觸控：縮放
+      let initialDistance = null;
+      let initialScale = null;
+
       model.addEventListener('touchstart', (event) => {
         if (event.touches.length === 2) {
           const touch1 = event.touches[0];
           const touch2 = event.touches[1];
-          const distance = Math.hypot(touch2.pageX - touch1.pageX, touch2.pageY - touch1.pageY);
-          window.initialDistance = distance;
-          window.initialScale = scale;
+          initialDistance = Math.hypot(touch2.pageX - touch1.pageX, touch2.pageY - touch1.pageY);
+          initialScale = scale;
+          event.preventDefault(); // 防止預設行為
         }
       });
 
@@ -120,11 +135,13 @@
           const touch1 = event.touches[0];
           const touch2 = event.touches[1];
           const distance = Math.hypot(touch2.pageX - touch1.pageX, touch2.pageY - touch1.pageY);
-          const scaleFactor = distance / window.initialDistance;
+          const scaleFactor = distance / initialDistance;
 
           // 調整縮放範圍（例如 0.05 到 0.5）
-          scale = Math.max(0.05, Math.min(0.5, window.initialScale * scaleFactor));
+          scale = Math.max(0.05, Math.min(0.5, initialScale * scaleFactor));
           model.setAttribute('scale', `${scale} ${scale} ${scale}`);
+
+          event.preventDefault(); // 防止預設行為
         }
       });
 
