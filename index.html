@@ -56,6 +56,9 @@
       const model = document.querySelector('#ar-model');
       const target = document.querySelector('#target');
 
+      // 確保模型初始隱藏，直到掃描成功
+      model.setAttribute('visible', false);
+
       // 監聽目標圖案被找到的事件，固定模型位置
       scene.addEventListener('targetFound', (event) => {
         if (event.detail && event.detail.targetEl) {
@@ -64,13 +67,19 @@
           const modelRotation = model.getAttribute('rotation');
           const modelScale = model.getAttribute('scale');
 
-          // 固定模型位置、旋轉和縮放，禁用動態更新
+          // 顯示模型並固定位置、旋轉和縮放
+          model.setAttribute('visible', true);
           model.setAttribute('position', modelPosition);
           model.setAttribute('rotation', modelRotation);
           model.setAttribute('scale', modelScale);
 
           // 移除 mindar-image-target 的動態追蹤
           targetEl.removeAttribute('mindar-image-target');
+
+          // 將模型從目標中分離，確保不再受追蹤影響
+          model.removeAttribute('mindar-image-target');
+          target.removeChild(model);
+          scene.appendChild(model);
         } else {
           console.error('Target element not found in targetFound event');
         }
