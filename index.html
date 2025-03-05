@@ -27,10 +27,7 @@
   <div class="example-container">
     <a-scene 
       mindar-image="imageTargetSrc: ./GC1.mind; 
-                    autoStart: true; 
-                    uiLoading: no; 
-                    uiError: no; 
-                    uiWarning: no;"
+                    autoStart: true"
       color-space="sRGB" 
       renderer="colorManagement: true, physicallyCorrectLights" 
       vr-mode-ui="enabled: false" 
@@ -51,40 +48,48 @@
           position="0 0 0"
           scale="0.1 0.1 0.1"
           src="./clue1.glb"
-          animation="property: rotation; to: 0 360 0; dur: 10000; easing: linear; loop: true"
-          link="href: https://xchuni-hlc.github.io/mathhunter01/club1.html"
+          custom-link="href: https://xchuni-hlc.github.io/mathhunter01/club1.html"
+          animation__rotation="property: rotation; 
+                               to: 180 540 0; 
+                               dur: 10000; 
+                               easing: linear; 
+                               loop: true"
         ></a-gltf-model>
       </a-entity>
     </a-scene>
   </div>
   
   <script>
-    // 為了確保點擊能夠正常工作，添加額外的點擊事件監聽器
+    // 移除可能重複的 link 組件定義
+    if (!AFRAME.components['custom-link']) {
+      AFRAME.registerComponent('custom-link', {
+        schema: {
+          href: {type: 'string', default: ''}
+        },
+        init: function () {
+          const data = this.data;
+          const el = this.el;
+
+          el.addEventListener('click', function () {
+            if (data.href) {
+              window.location.href = data.href;
+            }
+          });
+        }
+      });
+    }
+
+    // 確保點擊事件
     document.addEventListener('DOMContentLoaded', function() {
       const model = document.querySelector('#ar-model');
       
-      // 添加點擊事件
-      model.addEventListener('click', function() {
-        window.location.href = 'https://xchuni-hlc.github.io/mathhunter01/club1.html';
-      });
-
-      // 如果 A-Frame 的 link 組件不生效，這個事件監聽器可以作為備用
-      document.querySelector('a-scene').addEventListener('click', function(event) {
-        if (event.target.closest('#ar-model')) {
-          window.location.href = 'https://xchuni-hlc.github.io/mathhunter01/club1.html';
-        }
-      });
-    });
-
-    // 添加 A-Frame 的 link 組件
-    AFRAME.registerComponent('link', {
-      schema: {
-        href: {type: 'string'}
-      },
-      init: function () {
-        var data = this.data;
-        this.el.addEventListener('click', function () {
-          window.location.href = data.href;
+      if (model) {
+        // 添加額外的點擊事件監聽器
+        model.addEventListener('click', function() {
+          const linkComponent = model.getAttribute('custom-link');
+          if (linkComponent && linkComponent.href) {
+            window.location.href = linkComponent.href;
+          }
         });
       }
     });
