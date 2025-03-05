@@ -20,10 +20,19 @@
       width: 100%;
       height: 100%;
     }
+    #clickable-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 10;
+    }
   </style>
 </head>
 
 <body>
+  <div id="clickable-overlay"></div>
   <div class="example-container">
     <a-scene 
       mindar-image="imageTargetSrc: ./GC1.mind; 
@@ -45,50 +54,53 @@
         <a-gltf-model
           id="ar-model"
           rotation="15 90 30"
-          position="0 -0.1 0"
+          position="0 0 0.1"
           scale="0.1 0.1 0.1"
           src="./clue1.glb"
-          custom-link="href: https://xchuni-hlc.github.io/mathhunter01/club1.html"
-          animation__rotation="property: rotation; to: 0 360 0; dur: 10000; easing: linear; loop: true"
+          animation__rotation="property: rotation; 
+                               to: 180 540 0; 
+                               dur: 10000; 
+                               easing: linear; 
+                               loop: true"
         ></a-gltf-model>
       </a-entity>
     </a-scene>
   </div>
   
   <script>
-    // 移除可能重複的 link 組件定義
-    if (!AFRAME.components['custom-link']) {
-      AFRAME.registerComponent('custom-link', {
-        schema: {
-          href: {type: 'string', default: ''}
-        },
-        init: function () {
-          const data = this.data;
-          const el = this.el;
+    // 確保點擊事件在所有內容加載後執行
+    document.addEventListener('DOMContentLoaded', function() {
+      const scene = document.querySelector('a-scene');
+      const clickableOverlay = document.getElementById('clickable-overlay');
+      const targetUrl = 'https://xchuni-hlc.github.io/mathhunter01/club1.html';
 
-          el.addEventListener('click', function () {
-            if (data.href) {
-              window.location.href = data.href;
-            }
+      // 等待場景載入
+      scene.addEventListener('loaded', function () {
+        // 添加點擊事件到覆蓋層
+        clickableOverlay.addEventListener('click', function(event) {
+          const model = document.querySelector('#ar-model');
+          
+          // 檢查是否點擊到模型
+          if (model) {
+            console.log('Model clicked!');
+            window.location.href = targetUrl;
+          }
+        });
+
+        // 直接在模型上添加點擊事件
+        const model = document.querySelector('#ar-model');
+        if (model) {
+          model.addEventListener('click', function(event) {
+            console.log('Model clicked directly!');
+            window.location.href = targetUrl;
+            event.stopPropagation();
           });
         }
       });
-    }
-
-    // 確保點擊事件
-    document.addEventListener('DOMContentLoaded', function() {
-      const model = document.querySelector('#ar-model');
-      
-      if (model) {
-        // 添加額外的點擊事件監聽器
-        model.addEventListener('click', function() {
-          const linkComponent = model.getAttribute('custom-link');
-          if (linkComponent && linkComponent.href) {
-            window.location.href = linkComponent.href;
-          }
-        });
-      }
     });
+
+    // 添加調試日誌
+    console.log('Script loaded');
   </script>
 </body>
 </html>
