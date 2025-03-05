@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>WebAR - 數感小獵人</title>
+  <title>WebAR - 圖像追蹤示範</title>
   
   <!-- 引入 MindAR 和 A-Frame 庫 -->
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image.prod.js"></script>
@@ -20,22 +20,6 @@
       width: 100%;
       height: 100%;
     }
-    #ar-overlay {
-      position: fixed;
-      bottom: 20px;
-      left: 0;
-      right: 0;
-      text-align: center;
-      z-index: 10;
-    }
-    #ar-overlay button {
-      background-color: rgba(0,0,0,0.5);
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      margin: 0 10px;
-      border-radius: 5px;
-    }
   </style>
 </head>
 
@@ -43,8 +27,10 @@
   <div class="example-container">
     <a-scene 
       mindar-image="imageTargetSrc: ./GC1.mind; 
-                    filterMinCF: 1000; 
-                    filterBeta: 0.001;"
+                    autoStart: true; 
+                    uiLoading: no; 
+                    uiError: no; 
+                    uiWarning: no;"
       color-space="sRGB" 
       renderer="colorManagement: true, physicallyCorrectLights" 
       vr-mode-ui="enabled: false" 
@@ -54,8 +40,6 @@
       <a-camera 
         position="0 0 0" 
         look-controls="enabled: false"
-        cursor="rayOrigin: mouse"
-        raycaster="objects: [clickable]"
       ></a-camera>
 
       <!-- 目標圖像上的AR內容 -->
@@ -67,94 +51,43 @@
           position="0 -0.1 0.1"
           scale="0.1 0.1 0.1"
           src="./clue1.glb"
-          class="clickable"
-          gesture-handler
+          animation="property: rotation; to: 0 360 0; dur: 10000; easing: linear; loop: true"
+          link="href: https://xchuni-hlc.github.io/mathhunter01/club1.html"
         ></a-gltf-model>
       </a-entity>
     </a-scene>
   </div>
-
-  <div id="ar-overlay">
-    <button id="reset-model">Reset</button>
-  </div>
   
   <script>
-    // 手勢控制插件
-    AFRAME.registerComponent('gesture-handler', {
-      schema: {
-        enabled: { default: true }
-      },
-      init: function () {
-        const el = this.el;
-        const hammer = new Hammer(document.body);
-
-        // 縮放手勢
-        hammer.get('pinch').set({ enable: true });
-        
-        let initialScale = el.getAttribute('scale');
-        
-        hammer.on('pinchstart', (e) => {
-          initialScale = el.getAttribute('scale');
-        });
-
-        hammer.on('pinch', (e) => {
-          if (!this.data.enabled) return;
-          
-          const scale = {
-            x: initialScale.x * e.scale,
-            y: initialScale.y * e.scale,
-            z: initialScale.z * e.scale
-          };
-          
-          // 限制縮放範圍
-          if (scale.x > 0.1 && scale.x < 2) {
-            el.setAttribute('scale', scale);
-          }
-        });
-
-        // 旋轉手勢
-        hammer.on('rotatestart', (e) => {
-          el.setAttribute('data-initial-rotation', el.getAttribute('rotation'));
-        });
-
-        hammer.on('rotate', (e) => {
-          if (!this.data.enabled) return;
-          
-          const initialRotation = el.getAttribute('data-initial-rotation');
-          const newRotation = {
-            x: initialRotation.x,
-            y: initialRotation.y + e.rotation,
-            z: initialRotation.z
-          };
-          
-          el.setAttribute('rotation', newRotation);
-        });
-      }
-    });
-
-    // 點擊跳轉事件
+    // 為了確保點擊能夠正常工作，添加額外的點擊事件監聽器
     document.addEventListener('DOMContentLoaded', function() {
       const model = document.querySelector('#ar-model');
       
+      // 添加點擊事件
       model.addEventListener('click', function() {
         window.location.href = 'https://xchuni-hlc.github.io/mathhunter01/club1.html';
       });
 
-      // 重置模型按鈕
-      const resetButton = document.getElementById('reset-model');
-      resetButton.addEventListener('click', function() {
-        model.setAttribute('rotation', '180 0 0');
-        model.setAttribute('scale', '0.5 0.5 0.5');
+      // 如果 A-Frame 的 link 組件不生效，這個事件監聽器可以作為備用
+      document.querySelector('a-scene').addEventListener('click', function(event) {
+        if (event.target.closest('#ar-model')) {
+          window.location.href = 'https://xchuni-hlc.github.io/mathhunter01/club1.html';
+        }
       });
     });
 
-    // 引入Hammer.js實現手勢控制
-    const script = document.createElement('script');
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js';
-    script.onload = function() {
-      console.log('Hammer.js已加載');
-    };
-    document.head.appendChild(script);
+    // 添加 A-Frame 的 link 組件
+    AFRAME.registerComponent('link', {
+      schema: {
+        href: {type: 'string'}
+      },
+      init: function () {
+        var data = this.data;
+        this.el.addEventListener('click', function () {
+          window.location.href = data.href;
+        });
+      }
+    });
   </script>
 </body>
 </html>
