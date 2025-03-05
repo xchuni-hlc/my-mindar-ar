@@ -4,15 +4,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>WebAR - 數感小獵人</title>
   
-  <!-- 引入 MindAR 和 A-Frame 庫，設置為模組 -->
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image.prod.js" type="module"></script>
+  <!-- 引入 MindAR 和 A-Frame 庫 -->
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image.prod.js"></script>
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js" type="module"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
   
   <style>
-    body {
-      margin: 0;
-      overflow: hidden;
+    body { 
+      margin: 0; 
+      overflow: hidden; 
     }
     .example-container {
       overflow: hidden;
@@ -20,145 +20,141 @@
       width: 100%;
       height: 100%;
     }
+    #ar-overlay {
+      position: fixed;
+      bottom: 20px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      z-index: 10;
+    }
+    #ar-overlay button {
+      background-color: rgba(0,0,0,0.5);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      margin: 0 10px;
+      border-radius: 5px;
+    }
   </style>
 </head>
 
 <body>
   <div class="example-container">
     <a-scene 
-      mindar-image="imageTargetSrc: ./GC1.mind;" 
+      mindar-image="imageTargetSrc: ./GC1.mind; 
+                    filterMinCF: 1000; 
+                    filterBeta: 0.001;"
       color-space="sRGB" 
       renderer="colorManagement: true, physicallyCorrectLights" 
       vr-mode-ui="enabled: false" 
       device-orientation-permission-ui="enabled: false"
     >
       <!-- 設定相機 -->
-      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+      <a-camera 
+        position="0 0 0" 
+        look-controls="enabled: false"
+        cursor="rayOrigin: mouse"
+        raycaster="objects: [clickable]"
+      ></a-camera>
 
       <!-- 目標圖像上的AR內容 -->
-      <a-entity id="target" mindar-image-target="targetIndex: 0">
-        <!-- 3D模型 - 初始固定位置和大小 -->
+      <a-entity mindar-image-target="targetIndex: 0">
+        <!-- 3D模型 -->
         <a-gltf-model
           id="ar-model"
-          rotation="90 0 0"
-          position="0 -0.1 0.1"
-          scale="0.1 0.1 0.1"
+          rotation="180 0 0"
+          position="0 0 0.1"
+          scale="0.5 0.5 0.5"
           src="./clue1.glb"
+          class="clickable"
+          gesture-handler
         ></a-gltf-model>
       </a-entity>
     </a-scene>
   </div>
+
+  <div id="ar-overlay">
+    <button id="reset-model">Reset</button>
+  </div>
   
   <script>
-    // 當 DOM 載入完成時初始化
+    // 手勢控制插件
+    AFRAME.registerComponent('gesture-handler', {
+      schema: {
+        enabled: { default: true }
+      },
+      init: function () {
+        const el = this.el;
+        const hammer = new Hammer(document.body);
+
+        // 縮放手勢
+        hammer.get('pinch').set({ enable: true });
+        
+        let initialScale = el.getAttribute('scale');
+        
+        hammer.on('pinchstart', (e) => {
+          initialScale = el.getAttribute('scale');
+        });
+
+        hammer.on('pinch', (e) => {
+          if (!this.data.enabled) return;
+          
+          const scale = {
+            x: initialScale.x * e.scale,
+            y: initialScale.y * e.scale,
+            z: initialScale.z * e.scale
+          };
+          
+          // 限制縮放範圍
+          if (scale.x > 0.1 && scale.x < 2) {
+            el.setAttribute('scale', scale);
+          }
+        });
+
+        // 旋轉手勢
+        hammer.on('rotatestart', (e) => {
+          el.setAttribute('data-initial-rotation', el.getAttribute('rotation'));
+        });
+
+        hammer.on('rotate', (e) => {
+          if (!this.data.enabled) return;
+          
+          const initialRotation = el.getAttribute('data-initial-rotation');
+          const newRotation = {
+            x: initialRotation.x,
+            y: initialRotation.y + e.rotation,
+            z: initialRotation.z
+          };
+          
+          el.setAttribute('rotation', newRotation);
+        });
+      }
+    });
+
+    // 點擊跳轉事件
     document.addEventListener('DOMContentLoaded', function() {
-      const scene = document.querySelector('a-scene');
       const model = document.querySelector('#ar-model');
-      const target = document.querySelector('#target');
-
-      // 確保模型初始隱藏，直到掃描成功
-      model.setAttribute('visible', false);
-
-      // 監聽目標圖案被找到的事件，固定模型位置
-      scene.addEventListener('targetFound', (event) => {
-        if (event.detail && event.detail.targetEl) {
-          const targetEl = event.detail.targetEl;
-          const modelPosition = model.getAttribute('position');
-          const modelRotation = model.getAttribute('rotation');
-          const modelScale = model.getAttribute('scale');
-
-          // 顯示模型並固定位置、旋轉和縮放
-          model.setAttribute('visible', true);
-          model.setAttribute('position', modelPosition);
-          model.setAttribute('rotation', modelRotation);
-          model.setAttribute('scale', modelScale);
-
-          // 移除 mindar-image-target 的動態追蹤
-          targetEl.removeAttribute('mindar-image-target');
-
-          // 將模型從目標中分離，確保不再受追蹤影響
-          model.removeAttribute('mindar-image-target');
-          target.removeChild(model);
-          scene.appendChild(model);
-        } else {
-          console.error('Target element not found in targetFound event');
-        }
-      });
-
-      // 添加觸控互動：旋轉和縮放
-      let isDragging = false;
-      let previousTouch = null;
-      let rotation = { x: 0, y: 0 };
-      let scale = 0.1; // 初始縮放值
-
-      // 單指觸控：旋轉
-      model.addEventListener('touchstart', (event) => {
-        if (event.touches.length === 1) {
-          isDragging = true;
-          previousTouch = event.touches[0];
-          event.preventDefault(); // 防止預設行為
-        }
-      });
-
-      model.addEventListener('touchmove', (event) => {
-        if (isDragging && event.touches.length === 1) {
-          const currentTouch = event.touches[0];
-          const deltaX = currentTouch.pageX - previousTouch.pageX;
-          const deltaY = currentTouch.pageY - previousTouch.pageY;
-
-          // 根據觸控移動更新旋轉
-          rotation.y += deltaX * 0.1; // 水平旋轉
-          rotation.x += deltaY * 0.1; // 垂直旋轉
-
-          // 應用旋轉到模型
-          model.setAttribute('rotation', `${rotation.x} ${rotation.y} 0`);
-
-          previousTouch = currentTouch;
-          event.preventDefault(); // 防止預設行為
-        }
-      });
-
-      model.addEventListener('touchend', (event) => {
-        if (event.touches.length === 0) {
-          isDragging = false;
-          previousTouch = null;
-        }
-      });
-
-      // 雙指觸控：縮放
-      let initialDistance = null;
-      let initialScale = null;
-
-      model.addEventListener('touchstart', (event) => {
-        if (event.touches.length === 2) {
-          const touch1 = event.touches[0];
-          const touch2 = event.touches[1];
-          initialDistance = Math.hypot(touch2.pageX - touch1.pageX, touch2.pageY - touch1.pageY);
-          initialScale = scale;
-          event.preventDefault(); // 防止預設行為
-        }
-      });
-
-      model.addEventListener('touchmove', (event) => {
-        if (event.touches.length === 2) {
-          const touch1 = event.touches[0];
-          const touch2 = event.touches[1];
-          const distance = Math.hypot(touch2.pageX - touch1.pageX, touch2.pageY - touch1.pageY);
-          const scaleFactor = distance / initialDistance;
-
-          // 調整縮放範圍（例如 0.05 到 0.5）
-          scale = Math.max(0.05, Math.min(0.5, initialScale * scaleFactor));
-          model.setAttribute('scale', `${scale} ${scale} ${scale}`);
-
-          event.preventDefault(); // 防止預設行為
-        }
-      });
-
-      // 點擊跳轉到指定網頁
+      
       model.addEventListener('click', function() {
         window.location.href = 'https://xchuni-hlc.github.io/mathhunter01/club1.html';
       });
+
+      // 重置模型按鈕
+      const resetButton = document.getElementById('reset-model');
+      resetButton.addEventListener('click', function() {
+        model.setAttribute('rotation', '180 0 0');
+        model.setAttribute('scale', '0.5 0.5 0.5');
+      });
     });
+
+    // 引入Hammer.js實現手勢控制
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js';
+    script.onload = function() {
+      console.log('Hammer.js已加載');
+    };
+    document.head.appendChild(script);
   </script>
 </body>
 </html>
