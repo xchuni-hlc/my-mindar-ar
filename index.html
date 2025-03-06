@@ -4,9 +4,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>WebAR - 圖像追蹤示範</title>
   
-  <!-- 重要：先加載 A-Frame 後再加載 MindAR -->
-  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-  <!-- 使用舊版 MindAR，它與當前的 A-Frame 更兼容 -->
+  <!-- 使用來自官方CDN的最基本版本，按官方推薦順序加載 -->
+  <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.5/dist/mindar-image.prod.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.5/dist/mindar-image-aframe.prod.js"></script>
   
@@ -21,91 +21,54 @@
       width: 100%;
       height: 100%;
     }
-    #clickable-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 10;
-    }
   </style>
 </head>
 <body>
-  <div id="clickable-overlay"></div>
   <div class="example-container">
     <a-scene 
-      mindar-image="imageTargetSrc: ./GC1.mind; 
-                    autoStart: true;
-                    filterMinCF: 0.001;
-                    filterBeta: 0.01;
-                    missTolerance: 5"
-      color-space="sRGB" 
-      renderer="colorManagement: true; physicallyCorrectLights" 
+      mindar-image="imageTargetSrc: ./GC1.mind; autoStart: true;"
+      embedded
+      renderer="precision: mediump;"
       vr-mode-ui="enabled: false" 
       device-orientation-permission-ui="enabled: false"
     >
-      <!-- 設定相機 -->
-      <a-camera 
-        position="0 0 0" 
-        look-controls="enabled: false"
-      ></a-camera>
+      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
       
-      <!-- 目標圖像上的AR內容 -->
       <a-entity mindar-image-target="targetIndex: 0">
-        <!-- 3D模型 -->
         <a-gltf-model
           id="ar-model"
           rotation="180 0 0"
           position="0 0 0.1"
           scale="0.1 0.1 0.1"
           src="./clue1.glb"
-          animation="property: rotation; 
-                    to: 180 540 0; 
-                    dur: 10000; 
-                    easing: linear; 
-                    loop: true"
+          animation="property: rotation; to: 180 360 0; dur: 10000; easing: linear; loop: true"
         ></a-gltf-model>
       </a-entity>
     </a-scene>
   </div>
   
   <script>
-    // 確保點擊事件在所有內容加載後執行
     document.addEventListener('DOMContentLoaded', function() {
-      const scene = document.querySelector('a-scene');
-      const clickableOverlay = document.getElementById('clickable-overlay');
+      console.log('DOM content loaded');
+      
+      // 簡化點擊處理
       const targetUrl = 'https://xchuni-hlc.github.io/mathhunter01/club1.html';
       
-      // 等待場景載入
-      scene.addEventListener('loaded', function () {
+      // 等待場景載入後添加點擊事件
+      const scene = document.querySelector('a-scene');
+      scene.addEventListener('loaded', function() {
         console.log('Scene loaded');
         
-        // 添加點擊事件到覆蓋層
-        clickableOverlay.addEventListener('click', function(event) {
-          const model = document.querySelector('#ar-model');
-          
-          // 檢查是否點擊到模型
-          if (model) {
-            console.log('Model clicked through overlay!');
-            window.location.href = targetUrl;
-          }
-        });
-        
-        // 直接在模型上添加點擊事件
+        // 模型載入後添加點擊事件
         const model = document.querySelector('#ar-model');
         if (model) {
-          model.addEventListener('click', function(event) {
-            console.log('Model clicked directly!');
+          model.addEventListener('click', function() {
+            console.log('Model clicked!');
             window.location.href = targetUrl;
-            event.stopPropagation();
           });
         }
       });
     });
-    
-    // 添加調試日誌
-    console.log('Script loaded');
   </script>
 </body>
 </html>
