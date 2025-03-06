@@ -4,10 +4,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>WebAR - 圖像追蹤示範</title>
   
-  <!-- 引入 MindAR 和 A-Frame 庫 -->
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image.prod.js"></script>
+  <!-- 重要：先加載 A-Frame 後再加載 MindAR -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
+  <!-- 使用舊版 MindAR，它與當前的 A-Frame 更兼容 -->
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.5/dist/mindar-image.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.5/dist/mindar-image-aframe.prod.js"></script>
   
   <style>
     body { 
@@ -38,7 +39,6 @@
                     autoStart: true;
                     filterMinCF: 0.001;
                     filterBeta: 0.01;
-                    warmupTolerance: 5;
                     missTolerance: 5"
       color-space="sRGB" 
       renderer="colorManagement: true; physicallyCorrectLights" 
@@ -49,8 +49,6 @@
       <a-camera 
         position="0 0 0" 
         look-controls="enabled: false"
-        raycaster="objects: .clickable"
-        cursor="fuse: false; rayOrigin: mouse;"
       ></a-camera>
       
       <!-- 目標圖像上的AR內容 -->
@@ -58,16 +56,15 @@
         <!-- 3D模型 -->
         <a-gltf-model
           id="ar-model"
-          class="clickable"
           rotation="180 0 0"
           position="0 0 0.1"
           scale="0.1 0.1 0.1"
           src="./clue1.glb"
-          animation__rotation="property: rotation; 
-                               to: 180 540 0; 
-                               dur: 10000; 
-                               easing: linear; 
-                               loop: true"
+          animation="property: rotation; 
+                    to: 180 540 0; 
+                    dur: 10000; 
+                    easing: linear; 
+                    loop: true"
         ></a-gltf-model>
       </a-entity>
     </a-scene>
