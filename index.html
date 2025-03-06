@@ -4,11 +4,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>WebAR - 圖像追蹤示範</title>
   
-  <!-- 使用來自官方CDN的最基本版本，按官方推薦順序加載 -->
-  <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
-  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.5/dist/mindar-image.prod.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.5/dist/mindar-image-aframe.prod.js"></script>
+  <!-- 使用 MindAR 官方示例中的版本 -->
+  <script src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.1.5/dist/mindar-image.prod.js"></script>
+  <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.1.5/dist/mindar-image-aframe.prod.js"></script>
   
   <style>
     body { 
@@ -28,10 +27,15 @@
     <a-scene 
       mindar-image="imageTargetSrc: ./GC1.mind; autoStart: true;"
       embedded
-      renderer="precision: mediump;"
+      color-space="sRGB"
+      renderer="logarithmicDepthBuffer: true;"
       vr-mode-ui="enabled: false" 
       device-orientation-permission-ui="enabled: false"
     >
+      <a-assets>
+        <a-asset-item id="clueModel" src="./clue1.glb"></a-asset-item>
+      </a-assets>
+
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
       
       <a-entity mindar-image-target="targetIndex: 0">
@@ -40,7 +44,7 @@
           rotation="180 0 0"
           position="0 0 0.1"
           scale="0.1 0.1 0.1"
-          src="./clue1.glb"
+          src="#clueModel"
           animation="property: rotation; to: 180 360 0; dur: 10000; easing: linear; loop: true"
         ></a-gltf-model>
       </a-entity>
@@ -51,23 +55,24 @@
     document.addEventListener('DOMContentLoaded', function() {
       console.log('DOM content loaded');
       
-      // 簡化點擊處理
       const targetUrl = 'https://xchuni-hlc.github.io/mathhunter01/club1.html';
       
-      // 等待場景載入後添加點擊事件
-      const scene = document.querySelector('a-scene');
-      scene.addEventListener('loaded', function() {
-        console.log('Scene loaded');
-        
-        // 模型載入後添加點擊事件
-        const model = document.querySelector('#ar-model');
-        if (model) {
-          model.addEventListener('click', function() {
-            console.log('Model clicked!');
-            window.location.href = targetUrl;
-          });
-        }
+      // 點擊處理
+      document.addEventListener('click', function() {
+        // 簡單處理，點擊任意位置都跳轉
+        console.log('Document clicked!');
+        window.location.href = targetUrl;
       });
+      
+      // 顯示加載完成訊息
+      const sceneEl = document.querySelector('a-scene');
+      if (sceneEl.hasLoaded) {
+        console.log('Scene already loaded');
+      } else {
+        sceneEl.addEventListener('loaded', function () {
+          console.log('Scene has loaded');
+        });
+      }
     });
   </script>
 </body>
