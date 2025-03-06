@@ -4,76 +4,84 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>WebAR - 圖像追蹤示範</title>
   
-  <!-- 使用 MindAR 官方示例中的版本 -->
-  <script src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.1.5/dist/mindar-image.prod.js"></script>
-  <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.1.5/dist/mindar-image-aframe.prod.js"></script>
+  <!-- 完全按照官方示例 -->
+  <script src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.2/dist/mindar-image.prod.js"></script>
+  <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.2/dist/mindar-image-aframe.prod.js"></script>
   
   <style>
-    body { 
-      margin: 0; 
-      overflow: hidden; 
-    }
-    .example-container {
-      overflow: hidden;
-      position: absolute;
+    html, body {
+      position: relative;
+      margin: 0;
       width: 100%;
       height: 100%;
+      overflow: hidden;
     }
   </style>
 </head>
 <body>
-  <div class="example-container">
-    <a-scene 
-      mindar-image="imageTargetSrc: ./GC1.mind; autoStart: true;"
-      embedded
-      color-space="sRGB"
-      renderer="logarithmicDepthBuffer: true;"
-      vr-mode-ui="enabled: false" 
-      device-orientation-permission-ui="enabled: false"
-    >
-      <a-assets>
-        <a-asset-item id="clueModel" src="./clue1.glb"></a-asset-item>
-      </a-assets>
-
-      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-      
-      <a-entity mindar-image-target="targetIndex: 0">
-        <a-gltf-model
-          id="ar-model"
-          rotation="0 0 0"
-          position="0 0 0.1"
-          scale="0.1 0.1 0.1"
-          src="#clueModel"
-          animation="property: rotation; to: 180 360 0; dur: 10000; easing: linear; loop: true"
-        ></a-gltf-model>
-      </a-entity>
-    </a-scene>
-  </div>
+  <!-- 創建一個隱藏的a標籤用於導航 -->
+  <a id="navigation-link" href="https://xchuni-hlc.github.io/mathhunter01/club1.html" style="display: none;"></a>
+  
+  <a-scene mindar-image="imageTargetSrc: ./GC1.mind;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+    <a-entity mindar-image-target="targetIndex: 0">
+      <a-gltf-model
+        id="ar-model"
+        rotation="180 0 0"
+        position="0 0 0.1"
+        scale="0.1 0.1 0.1"
+        src="./clue1.glb"
+        animation="property: rotation; to: 180 360 0; dur: 10000; easing: linear; loop: true"
+      ></a-gltf-model>
+    </a-entity>
+  </a-scene>
   
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      console.log('DOM content loaded');
+    // 創建全屏點擊處理
+    document.addEventListener('click', function() {
+      console.log('Clicked anywhere on the document');
+      const model = document.querySelector('#ar-model');
       
-      const targetUrl = 'https://xchuni-hlc.github.io/mathhunter01/club1.html';
-      
-      // 點擊處理
-      document.addEventListener('click', function() {
-        // 簡單處理，點擊任意位置都跳轉
-        console.log('Document clicked!');
-        window.location.href = targetUrl;
-      });
-      
-      // 顯示加載完成訊息
-      const sceneEl = document.querySelector('a-scene');
-      if (sceneEl.hasLoaded) {
-        console.log('Scene already loaded');
-      } else {
-        sceneEl.addEventListener('loaded', function () {
-          console.log('Scene has loaded');
+      // 檢測模型是否加載完成
+      if (model && model.hasLoaded) {
+        console.log('Model is loaded, navigating...');
+        document.getElementById('navigation-link').click();
+      } else if (model) {
+        console.log('Model exists but not loaded yet');
+        model.addEventListener('model-loaded', function() {
+          console.log('Model loaded event, navigating...');
+          document.getElementById('navigation-link').click();
         });
+      } else {
+        console.log('Model not found');
       }
     });
+    
+    // 在控制台顯示調試信息
+    const scene = document.querySelector('a-scene');
+    
+    // 場景加載事件
+    scene.addEventListener('loaded', function() {
+      console.log('A-Frame scene loaded');
+    });
+    
+    // 目標檢測事件
+    const sceneSystem = scene.systems["mindar-image-system"];
+    if (sceneSystem) {
+      sceneSystem.el.addEventListener('targetFound', function() {
+        console.log('Target image found');
+      });
+      
+      sceneSystem.el.addEventListener('targetLost', function() {
+        console.log('Target image lost');
+      });
+    } else {
+      console.log('MindAR system not found');
+    }
+    
+    // 初始加載完成
+    console.log('Script loaded');
   </script>
 </body>
 </html>
