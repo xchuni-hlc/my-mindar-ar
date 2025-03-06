@@ -4,140 +4,69 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>WebAR - 圖像追蹤示範</title>
   
-  <!-- 使用純Three.js版本的MindAR (沒有A-Frame依賴) -->
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.1/dist/mindar-image.prod.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.133.0/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.133.0/examples/js/loaders/GLTFLoader.js"></script>
+  <!-- 使用官方示例中最常見的搭配 -->
+  <script src="https://aframe.io/releases/1.0.4/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.0.0/dist/mindar-image.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.0.0/dist/mindar-image-aframe.prod.js"></script>
   
   <style>
     html, body {
       margin: 0;
+      padding: 0;
       width: 100%;
       height: 100%;
       overflow: hidden;
-      position: relative;
-    }
-    #container {
-      width: 100%;
-      height: 100%;
-      position: relative;
-      overflow: hidden;
-    }
-    #info {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      color: white;
-      background: rgba(0,0,0,0.5);
-      padding: 5px;
-      border-radius: 5px;
-      z-index: 100;
     }
   </style>
 </head>
 <body>
-  <div id="container">
-    <div id="info">正在加載 WebAR...</div>
-  </div>
+  <a-scene 
+    mindar-image="imageTargetSrc: ./GC1.mind; showStats: false;" 
+    embedded 
+    renderer="colorManagement: true;" 
+    vr-mode-ui="enabled: false" 
+    device-orientation-permission-ui="enabled: false"
+  >
+    <a-assets>
+      <a-asset-item id="clue-model" src="./clue1.glb"></a-asset-item>
+    </a-assets>
+    
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+    
+    <a-entity mindar-image-target="targetIndex: 0">
+      <a-entity 
+        id="ar-model" 
+        gltf-model="#clue-model"
+        scale="0.1 0.1 0.1" 
+        position="0 0 0.1" 
+        rotation="180 0 0"
+        animation="property: rotation; to: 180 360 0; loop: true; dur: 10000; easing: linear;"
+      ></a-entity>
+    </a-entity>
+  </a-scene>
   
   <script>
-    // 使用純 Three.js 而不是 A-Frame
-    const start = async () => {
-      const infoElement = document.getElementById('info');
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('頁面加載完成');
       
-      try {
-        infoElement.textContent = "初始化 AR...";
-        
-        // 初始化 MindAR
-        const mindarThree = new window.MINDAR.IMAGE.MindARThree({
-          container: document.querySelector("#container"),
-          imageTargetSrc: './GC1.mind',
+      // 監聽目標找到和丟失事件
+      const sceneEl = document.querySelector('a-scene');
+      const entity = document.querySelector('[mindar-image-target]');
+      
+      if (entity) {
+        entity.addEventListener('targetFound', function() {
+          console.log('目標找到');
         });
         
-        const {renderer, scene, camera} = mindarThree;
-        
-        // 建立燈光
-        const light = new THREE.HemisphereLight(0xffffff, 0xbbbbbb, 1);
-        scene.add(light);
-        
-        // 加載 3D 模型
-        infoElement.textContent = "加載 3D 模型...";
-        const loader = new THREE.GLTFLoader();
-        
-        // 建立錨點
-        const anchor = mindarThree.addAnchor(0);
-        
-        // 群組用於放置模型和處理動畫
-        const modelGroup = new THREE.Group();
-        anchor.group.add(modelGroup);
-        
-        // 加載模型
-        loader.load('./clue1.glb', (gltf) => {
-          infoElement.textContent = "模型已加載！點擊模型繼續。";
-          const model = gltf.scene;
-          
-          // 調整模型
-          model.rotation.x = Math.PI; // 180度轉換為弧度
-          model.position.set(0, 0, 0.1);
-          model.scale.set(0.1, 0.1, 0.1);
-          
-          // 添加到錨點群組
-          modelGroup.add(model);
-        }, 
-        // onProgress 回調
-        (xhr) => {
-          const percentage = Math.round((xhr.loaded / xhr.total) * 100);
-          infoElement.textContent = `加載進度: ${percentage}%`;
-        },
-        // onError 回調 
-        (error) => {
-          infoElement.textContent = "加載模型時出錯";
-          console.error("模型加載錯誤:", error);
+        entity.addEventListener('targetLost', function() {
+          console.log('目標丟失');
         });
-        
-        // 添加點擊事件
-        const targetUrl = 'https://xchuni-hlc.github.io/mathhunter01/club1.html';
-        document.addEventListener('click', () => {
-          if (anchor.visible) {
-            window.location.href = targetUrl;
-          }
-        });
-        
-        // 啟動 AR
-        await mindarThree.start();
-        
-        // 動畫循環
-        const clock = new THREE.Clock();
-        
-        renderer.setAnimationLoop(() => {
-          // 旋轉模型
-          if (modelGroup) {
-            modelGroup.rotation.y += 0.01;
-          }
-          renderer.render(scene, camera);
-        });
-        
-        infoElement.textContent = "AR 已啟動！等待識別目標圖像...";
-        
-        // 監聽目標發現事件
-        anchor.onTargetFound = () => {
-          infoElement.textContent = "目標圖像已識別！點擊模型繼續。";
-        };
-        
-        // 監聽目標丟失事件
-        anchor.onTargetLost = () => {
-          infoElement.textContent = "目標圖像丟失！請重新對準圖像。";
-        };
-        
-      } catch (error) {
-        infoElement.textContent = "初始化 AR 時出錯";
-        console.error("錯誤:", error);
       }
-    };
-    
-    // 啟動應用
-    window.addEventListener('DOMContentLoaded', () => {
-      start();
+      
+      // 點擊跳轉
+      document.addEventListener('click', function() {
+        window.location.href = 'https://xchuni-hlc.github.io/mathhunter01/club1.html';
+      });
     });
   </script>
 </body>
